@@ -26,8 +26,7 @@ def generate_response(video_summary, comments, user_prompt):
         [
             SystemMessage(
                 content=(
-                    """You are a children book author and you write books for children. 
-                    Return a story of 5 paragraphs, with a maximum of 3 sentences per paragraph."""
+                    """You are a assistant to help a TikTok content creator understand and find out what their audience is saying about their video."""
                 )
             ),
             HumanMessagePromptTemplate.from_template("""Video Description: {video_summary}
@@ -42,6 +41,7 @@ def generate_response(video_summary, comments, user_prompt):
     llm = ChatGoogleGenerativeAI(model="gemini-1.5-flash", convert_system_message_to_human=True, google_api_key=GOOGLE_API_KEY)
     results = llm.invoke(chat_message)
     return results.content
+
 
 
 
