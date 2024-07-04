@@ -1,34 +1,23 @@
-import { ThemeIcon, Text, Title, Container, SimpleGrid, rem } from '@mantine/core';
-import { IconGauge, IconCookie, IconUser, IconMessage2, IconLock } from '@tabler/icons-react';
+import { useMantineColorScheme, ThemeIcon, Text, Container, SimpleGrid, rem } from '@mantine/core';
+import { IconGauge, IconCookie, IconUser } from '@tabler/icons-react';
 import classes from './FeaturesGrid.module.css';
 
 export const MOCKDATA = [
   {
     icon: IconGauge,
-    title: 'suggestion1',
-    description:
-      'nomnomnom nomnomnom nomnomnom nomnomnom',
+    title: 'summarise video comments',
+    description: 'nomnomnom nomnomnom nomnomnom nomnomnom',
   },
   {
     icon: IconUser,
-    title: 'suggestion2',
-    description:
-      'omnomnomn omnomnomn omnomnomn omnomnomn',
+    title: 'conduct sentiment analysis',
+    description: 'omnomnomn omnomnomn omnomnomn omnomnomn',
   },
   {
     icon: IconCookie,
-    title: 'suggestion3',
-
-    description:
-      'hehehehehe hehehehehe hehehehehe hehehehehe',
+    title: 'suggest new ideas for future videos',
+    description: 'hehehehehe hehehehehe hehehehehe hehehehehe',
   },
-  {
-    icon: IconCookie,
-    title: 'suggestion4',
-    description:
-      'hehehehehe hehehehehe hehehehehe hehehehehe',
-  }
-
 ];
 
 interface FeatureProps {
@@ -38,17 +27,28 @@ interface FeatureProps {
 }
 
 export function Feature({ icon: Icon, title, description }: FeatureProps) {
+  const { colorScheme } = useMantineColorScheme();
   return (
-    <div>
+    <div
+      style={{
+        background: colorScheme === 'dark' ? '#2C2E33' : '#f0f0f0',
+        border: `1px solid ${colorScheme === 'dark' ? '#4A4A4A' : '#e0e0e0'}`, 
+        padding: '10px',
+        borderRadius: '10px',
+        display: 'inline-block',
+        cursor: 'pointer',
+        transition: 'background-color 0.3s ease',
+      }}
+    >
       <ThemeIcon variant="light" size={40} radius={40}>
         <Icon style={{ width: rem(18), height: rem(18) }} stroke={1.5} />
       </ThemeIcon>
       <Text mt="sm" mb={7}>
         {title}
       </Text>
-      <Text size="sm" c="dimmed" lh={1.6}>
+      {/* <Text size="sm" c="dimmed" lh={1.6}>
         {description}
-      </Text>
+      </Text> */}
     </div>
   );
 }

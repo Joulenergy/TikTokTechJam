@@ -19,7 +19,7 @@ export function InputWithButton1(props: TextInputProps) {
         flexDirection: 'column', // Align items in a column
         justifyContent: 'flex-end',
         // height: '85vh', // This makes the div take up the full viewport height
-        // padding: '10px'
+        padding: '10px'
       }}
     >
       {/* <div style={{ marginBottom: '1rem' }}>
@@ -27,14 +27,13 @@ export function InputWithButton1(props: TextInputProps) {
           <Image radius="md" h={80} w={80} component={NextImage} src={logo} alt="My Logo" />
         </div>
       </div> */}
-      <p style={{ textAlign: 'left' }}>What would you like me to analyse today?</p>
+      <p style={{ textAlign: 'left' }}>What would you like to explore about these videos?</p>
       <div style={{ marginBottom: '1rem' }}>
         <TextInput
           radius="xl"
           size="md"
           placeholder="Message CommentSense!"
           rightSectionWidth={42}
-          leftSection={<IconSearch style={{ width: rem(18), height: rem(18) }} stroke={1.5} />}
           rightSection={
             <ActionIcon
               size={32}
