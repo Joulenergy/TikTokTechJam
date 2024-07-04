@@ -1,15 +1,22 @@
 import React from 'react';
-import { TextInput, TextInputProps, ActionIcon, useMantineTheme, rem, Image } from '@mantine/core';
-import { IconSearch, IconArrowRight } from '@tabler/icons-react';
-import { useRouter } from 'next/router'; // Import useRouter hook from Next.js
+import { TextInput, TextInputProps, ActionIcon, useMantineTheme, rem } from '@mantine/core';
+import { IconArrowRight } from '@tabler/icons-react';
+import { useState } from 'react';
 
-export function InputWithButton1(props: TextInputProps) {
+export function ChatInput(props: TextInputProps) {
   const theme = useMantineTheme();
-  const router = useRouter();
+  const [value, setValue] = useState('');
 
-  const handleButtonClick = () => {
-    // Navigate to the desired page here
-    router.push('./chat');
+  const exists = localStorage.getItem('messages');
+  const messages = exists ? JSON.parse(exists) : [];
+  const sendMessage = async () => {
+    if (value.length > 100) {
+      alert('Must not exceed 100 characters');
+    } else {
+      messages.push(value)
+      localStorage.setItem('messages', JSON.stringify(messages))
+      setValue('');
+    }
   };
 
   return (
@@ -19,7 +26,7 @@ export function InputWithButton1(props: TextInputProps) {
         flexDirection: 'column', // Align items in a column
         justifyContent: 'flex-end',
         // height: '85vh', // This makes the div take up the full viewport height
-        padding: '10px'
+        padding: '10px',
       }}
     >
       {/* <div style={{ marginBottom: '1rem' }}>
@@ -33,6 +40,8 @@ export function InputWithButton1(props: TextInputProps) {
           radius="xl"
           size="md"
           placeholder="Message CommentSense!"
+          value={value}
+          onChange={(event) => setValue(event.currentTarget.value)}
           rightSectionWidth={42}
           rightSection={
             <ActionIcon
@@ -40,7 +49,7 @@ export function InputWithButton1(props: TextInputProps) {
               radius="xl"
               color={theme.primaryColor}
               variant="filled"
-              onClick={handleButtonClick} // Add onClick handler to navigate to another page
+              onClick={sendMessage} // Add onClick handler to navigate to another page
               style={{ cursor: 'pointer' }} // Optional: Show pointer cursor on hover
             >
               <IconArrowRight style={{ width: rem(18), height: rem(18) }} stroke={1.5} />
@@ -53,4 +62,4 @@ export function InputWithButton1(props: TextInputProps) {
   );
 }
 
-export default InputWithButton1;
+export default ChatInput;
