@@ -20,8 +20,8 @@ export function InputWithButton(props: TextInputProps) {
       display: 'flex',
       flexDirection: 'column', // Align items in a column
       justifyContent: 'center',
-      padding: '10px',
-      height: '85vh', // This makes the div take up the full viewport height
+      // padding: '10px',
+      // height: '85vh', // This makes the div take up the full viewport height
     }}>
       <div style={{ marginBottom: '1rem' }}>
         <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
