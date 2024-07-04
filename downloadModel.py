@@ -1,10 +1,6 @@
 import os
-import pyktok as pyk
-import av
 import torch
 from transformers import LlavaNextVideoProcessor, LlavaNextVideoForConditionalGeneration, BitsAndBytesConfig
-from transformers.utils import cached_file
-import numpy as np
 
 model_id = "llava-hf/LLaVA-NeXT-Video-7B-hf"
 
