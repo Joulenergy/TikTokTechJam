@@ -1,14 +1,14 @@
 from typing import List, Dict
 import requests
 import re
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from fastapi import Query, Body
 from fastapi.responses import JSONResponse
 from backend import app
 from pydantic import BaseModel
 
-from .videoSummary import VideoSummary
+from .models import VideoSummary, CommentSummary
 
 class VideoURLS(BaseModel):
     URLS: List[str]
@@ -21,8 +21,8 @@ def home():
     return {"text": "Site is up!"}
 
 
-@app.post("/videos/comments/")
-def scrapeVideo(
+@app.post("/summarise/comments/")
+def summarise_comments(
     threads: int = Query(100, description="Number of threads to use for scraping"),
     retries: int = Query(3, description="Number of retries for each video URL"),
     scrapeCount: int = Query(
@@ -46,10 +46,12 @@ def scrapeVideo(
     - videoURLS (list[str]): List of video URLs to scrape comments from
 
     """
-    if len(videoURLS.URLS)==0:
-        return JSONResponse(status=422 ,content={"Error": "videoURLS cannot be empty"})
+    commentSummariser: CommentSummary = CommentSummary()
+    if len(videoURLS.URLS) == 0:
+        return JSONResponse(status=422, content={"Error": "videoURLS cannot be empty"})
 
     results: dict = {}
+    summaries: dict = {}
 
     with ThreadPoolExecutor(max_workers=threads) as executor:
         futures = [
@@ -61,11 +63,17 @@ def scrapeVideo(
             result: Dict[str, List[str]] = future.result()
             results.update(result)
 
-    return JSONResponse(content={"result": results})
+    # Replace all single quotes with double quotes to avoid JSON parsing issues
+    
+
+    for key, value in results.items():
+        summaries[key] = commentSummariser.get_comments_summary(value["comments"])
+        
+    return JSONResponse(content={"results": summaries})
 
 
-@app.post("/videos/summarise/")
-async def summariseVideo(
+@app.post("/summarise/videos/")
+async def summarise_video(
     threads: int = Query(100, description="Number of threads to use for summarisation"),
     videoURLS: VideoURLS = Body(
         ..., description="List of video URLs to scrape comments from")
@@ -81,7 +89,7 @@ Args:
 
 - videoURLS (list[str]): List of video URLs to get video summaries from
 """
-    videoSummariser = VideoSummary()
+    videoSummariser: VideoSummary = VideoSummary()
 
     if len(videoURLS.URLS)==0:
         return JSONResponse(status=422 ,content={"Error": "videoURLS cannot be empty"})
@@ -132,12 +140,12 @@ def scrapeHandler(
 
     try:
         response = requests.get(url, headers=headers, data=payload)
-        response.raise_for_status()  # Raise an HTTPError for bad responses
+        response.raise_for_status()  # Raise an HTTPError for bad responses)
         data_json = response.json()
 
         # Check if the necessary keys are in the response
         if data_json and "comments" in data_json and "has_more" in data_json:
-            data = [comment["text"] for comment in data_json["comments"]]
+            data = [{"text": comment["text"], "likes": comment["digg_count"]} for comment in data_json["comments"] if comment.get("comment_language") == "en"]
             has_more = bool(data_json["has_more"])
             return data, has_more, False
         else:
@@ -155,7 +163,7 @@ def scrapeManager(
     aweme_id = re.search(r"video\/([0-9]*)", videoLink)
     if aweme_id is None:
         print(f"Invalid video link: {videoLink}")
-        return {videoLink: []}
+        return {videoLink: {"comments": [], "comment_count": 0, "error": "Invalid video link"}}
 
     aweme_id = aweme_id.group(1)
     comments = []
@@ -174,4 +182,10 @@ def scrapeManager(
             curr += scrapeCount
             retries = 0
 
-    return {videoLink: {"comments": comments, "comment_count": len(comments)}}
+    # Sort comments by digg_count in descending order and take the top 100
+    sorted_comments = sorted(comments, key=lambda x: x["likes"], reverse=True)[:100]
+
+    print(sorted_comments)
+
+    return {videoLink: {"comments": sorted_comments, "comment_count": len(sorted_comments)}}
+

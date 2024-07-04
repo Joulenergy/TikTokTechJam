@@ -25,7 +25,7 @@ processor = LlavaNextVideoProcessor.from_pretrained(
     trust_remote_code=True,
 )
 
-save_dir = 'backend/llava-next'
+save_dir = 'backend/models/videoSummariser/llava-next'
 os.makedirs(save_dir, exist_ok=True)
 model.save_pretrained(save_dir)
 processor.save_pretrained(save_dir)
