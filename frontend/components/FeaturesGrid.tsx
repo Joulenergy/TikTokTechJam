@@ -58,20 +58,11 @@ export function FeaturesGrid() {
 
   return (
     <Container className={classes.wrapper}>
-      <Title className={classes.title}>Integrate effortlessly with any technology stack</Title>
-
-      <Container size={560} p={0}>
-        <Text size="sm" className={classes.description}>
-          Every once in a while, you’ll see a Golbat that’s missing some fangs. This happens when
-          hunger drives it to try biting a Steel-type Pokémon.
-        </Text>
-      </Container>
-
       <SimpleGrid
         mt={60}
         cols={{ base: 1, sm: 2, md: 3 }}
-        spacing={{ base: 'xl', md: 50 }}
-        verticalSpacing={{ base: 'xl', md: 50 }}
+        // spacing={{ base: 'xl', md: 50 }}
+        // verticalSpacing={{ base: 'xl', md: 50 }}
       >
         {features}
       </SimpleGrid>
