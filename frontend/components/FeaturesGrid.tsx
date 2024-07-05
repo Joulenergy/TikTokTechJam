@@ -6,33 +6,29 @@ export const MOCKDATA = [
   {
     icon: IconGauge,
     title: 'summarise video comments',
-    description: 'nomnomnom nomnomnom nomnomnom nomnomnom',
   },
   {
     icon: IconUser,
     title: 'conduct sentiment analysis',
-    description: 'omnomnomn omnomnomn omnomnomn omnomnomn',
   },
   {
     icon: IconCookie,
     title: 'suggest new ideas for future videos',
-    description: 'hehehehehe hehehehehe hehehehehe hehehehehe',
   },
 ];
 
 interface FeatureProps {
   icon: React.FC<any>;
   title: React.ReactNode;
-  description: React.ReactNode;
 }
 
-export function Feature({ icon: Icon, title, description }: FeatureProps) {
+export function Feature({ icon: Icon, title }: FeatureProps) {
   const { colorScheme } = useMantineColorScheme();
   return (
     <div
       style={{
         background: colorScheme === 'dark' ? '#2C2E33' : '#f0f0f0',
-        border: `1px solid ${colorScheme === 'dark' ? '#4A4A4A' : '#e0e0e0'}`, 
+        border: `1px solid ${colorScheme === 'dark' ? '#4A4A4A' : '#e0e0e0'}`,
         padding: '10px',
         borderRadius: '10px',
         display: 'inline-block',
@@ -46,9 +42,6 @@ export function Feature({ icon: Icon, title, description }: FeatureProps) {
       <Text mt="sm" mb={7}>
         {title}
       </Text>
-      {/* <Text size="sm" c="dimmed" lh={1.6}>
-        {description}
-      </Text> */}
     </div>
   );
 }
@@ -57,9 +50,8 @@ export function FeaturesGrid() {
   const features = MOCKDATA.map((feature, index) => <Feature {...feature} key={index} />);
 
   return (
-    <Container className={classes.wrapper}>
+    <Container>
       <SimpleGrid
-        mt={60}
         cols={{ base: 1, sm: 2, md: 3 }}
         // spacing={{ base: 'xl', md: 50 }}
         // verticalSpacing={{ base: 'xl', md: 50 }}

@@ -2,21 +2,22 @@ import React from 'react';
 import { TextInput, TextInputProps, ActionIcon, useMantineTheme, rem } from '@mantine/core';
 import { IconArrowRight } from '@tabler/icons-react';
 import { useState } from 'react';
+import { getHotkeyHandler } from "@mantine/hooks";
 
-export function ChatInput(props: TextInputProps) {
+interface ExtendedTextInputProps extends TextInputProps {
+  fn: () => void;
+  addMessage: (mess: string) => void;
+}
+
+export function ChatInput(props: ExtendedTextInputProps) {
+  const { fn, addMessage, ...textInputProps } = props;
   const theme = useMantineTheme();
   const [value, setValue] = useState('');
 
-  const exists = localStorage.getItem('messages');
-  const messages = exists ? JSON.parse(exists) : [];
   const sendMessage = async () => {
-    if (value.length > 100) {
-      alert('Must not exceed 100 characters');
-    } else {
-      messages.push(value)
-      localStorage.setItem('messages', JSON.stringify(messages))
-      setValue('');
-    }
+    fn();
+    addMessage(value);
+    setValue('');
   };
 
   return (
@@ -25,15 +26,9 @@ export function ChatInput(props: TextInputProps) {
         display: 'flex',
         flexDirection: 'column', // Align items in a column
         justifyContent: 'flex-end',
-        // height: '85vh', // This makes the div take up the full viewport height
         padding: '10px',
       }}
     >
-      {/* <div style={{ marginBottom: '1rem' }}>
-        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-          <Image radius="md" h={80} w={80} component={NextImage} src={logo} alt="My Logo" />
-        </div>
-      </div> */}
       <p style={{ textAlign: 'left' }}>What would you like to explore about these videos?</p>
       <div style={{ marginBottom: '1rem' }}>
         <TextInput
@@ -49,13 +44,20 @@ export function ChatInput(props: TextInputProps) {
               radius="xl"
               color={theme.primaryColor}
               variant="filled"
-              onClick={sendMessage} // Add onClick handler to navigate to another page
-              style={{ cursor: 'pointer' }} // Optional: Show pointer cursor on hover
+              onClick={sendMessage} 
+              style={{ cursor: 'pointer' }}
             >
               <IconArrowRight style={{ width: rem(18), height: rem(18) }} stroke={1.5} />
             </ActionIcon>
           }
-          {...props}
+          onKeyDown={
+            !/\S/.test(value)
+              ? undefined
+              : value.length < 2
+              ? undefined
+              : getHotkeyHandler([["Enter", sendMessage]])
+          }
+          {...textInputProps}
         />
       </div>
     </div>
