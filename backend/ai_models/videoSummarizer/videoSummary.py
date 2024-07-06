@@ -43,7 +43,7 @@ class VideoSummary:
         prompt = self.processor.apply_chat_template(conversation, add_generation_prompt=True)
 
         container = av.open(videoPath)
-        framesSampled = 32
+        framesSampled = 64
         total_frames = container.streams.video[0].frames
         indices = np.arange(0, total_frames, total_frames / framesSampled).astype(int)
         clip = self.read_video_pyav(container, indices)
@@ -51,7 +51,7 @@ class VideoSummary:
 
         inputs_video = self.processor(text=prompt, videos=clip, padding=True, return_tensors="pt").to(self.model.device)
 
-        output = self.model.generate(**inputs_video, max_new_tokens=150, do_sample=False)
+        output = self.model.generate(**inputs_video, max_new_tokens=100, do_sample=False)
 
         unprocessed_text = self.processor.decode(output[0], skip_special_tokens=True)
 

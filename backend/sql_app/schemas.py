@@ -2,13 +2,15 @@ from pydantic import BaseModel, EmailStr
 from typing import List, Optional
 
 class VideoCommentBase(BaseModel):
+    video_id: int
+    comment_category: Optional[str] = None
     summary: Optional[str] = None
     category_count: Optional[int] = None
     comment_insights: Optional[str] = None  # JSON string
     representative_comments: Optional[str] = None  # JSON string
 
 class VideoCommentCreate(VideoCommentBase):
-    video_id: int
+    pass
 
 class VideoComment(VideoCommentBase):
     id: int
@@ -18,32 +20,16 @@ class VideoComment(VideoCommentBase):
         orm_mode: True
 
 class VideoBase(BaseModel):
-    url: Optional[str] = None
+    url: str
+    title: Optional[str] = None
     summary: Optional[str] = None
 
 class VideoCreate(VideoBase):
-    user_id: int
+    pass
 
 class Video(VideoBase):
     id: int
-    user_id: int
     comments: List[VideoComment] = []
-
-    class Config:
-        orm_mode: True
-
-class UserBase(BaseModel):
-    email: Optional[EmailStr] = None
-    is_active: Optional[bool] = True
-
-class UserCreate(UserBase):
-    email: EmailStr
-    password: str
-
-class User(UserBase):
-    id: int
-    hashed_password: str
-    videos: List[Video] = []
 
     class Config:
         orm_mode: True

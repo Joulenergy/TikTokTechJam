@@ -2,6 +2,7 @@ from typing import List, Dict
 import requests
 import re
 from concurrent.futures import ThreadPoolExecutor, as_completed
+import json
 
 from fastapi import Query, Body, Depends
 from fastapi.responses import JSONResponse
@@ -23,119 +24,105 @@ def home():
     """
     return {"text": "Site is up!"}
 
-# User endpoints
-@app.post("/users/")
-def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
-    db_user = crud.get_user_by_email(db, email=user.email)
-    if db_user:
-        return JSONResponse(status_code=400, content={"Error": "Email already registered"})
-    return crud.create_user(db=db, user=user)
-
-@app.get("/users/")
-def read_users(skip: int = 0, limit: int = 10, db: Session = Depends(get_db)):
-    users = crud.get_users(db, skip=skip, limit=limit)
-    return JSONResponse(content={"users": [user.__dict__ for user in users]})
-
-@app.get("/users/{user_id}")
-def read_user(user_id: int, db: Session = Depends(get_db)):
-    db_user = crud.get_user(db, user_id=user_id)
-    if db_user is None:
-        return JSONResponse(status_code=404, content={"Error": "User not found"})
-    return JSONResponse(content=db_user.__dict__)
-
 # Video endpoints
-@app.post("/videos/")
+@app.post("/videos/", tags=["videos"])
 def create_video(video: schemas.VideoCreate, db: Session = Depends(get_db)):
     return JSONResponse(content=crud.create_video(db=db, video=video).__dict__)
 
-@app.get("/videos/")
+@app.get("/videos/", tags=["videos"])
 def read_videos(skip: int = 0, limit: int = 10, db: Session = Depends(get_db)):
     videos = crud.get_videos(db, skip=skip, limit=limit)
     return JSONResponse(content={"videos": [video.__dict__ for video in videos]})
 
-@app.get("/videos/{video_id}")
+@app.get("/videos/{video_id}", tags=["videos"])
 def read_video(video_id: int, db: Session = Depends(get_db)):
     db_video = crud.get_video(db, video_id=video_id)
     if db_video is None:
         return JSONResponse(status_code=404, content={"Error": "Video not found"})
     return JSONResponse(content=db_video.__dict__)
 
-@app.get("/users/{user_id}/videos/")
-def read_user_videos(user_id: int, skip: int = 0, limit: int = 10, db: Session = Depends(get_db)):
-    videos = crud.get_videos_by_user(db, user_id=user_id, skip=skip, limit=limit)
-    return JSONResponse(content={"videos": [video.__dict__ for video in videos]})
-
-# VideoComment endpoints
-@app.post("/video-comments/")
-def create_video_comment(video_comment: schemas.VideoCommentCreate, db: Session = Depends(get_db)):
-    return JSONResponse(content=crud.create_video_comment(db=db, video_comment=video_comment).__dict__)
-
-@app.get("/video-comments/")
-def read_video_comments(skip: int = 0, limit: int = 10, db: Session = Depends(get_db)):
-    video_comments = crud.get_video_comments(db, skip=skip, limit=limit)
-    return JSONResponse(content={"video_comments": [comment.__dict__ for comment in video_comments]})
-
-@app.get("/video-comments/{comment_id}")
-def read_video_comment(comment_id: int, db: Session = Depends(get_db)):
-    db_video_comment = crud.get_video_comment(db, comment_id=comment_id)
-    if db_video_comment is None:
-        return JSONResponse(status_code=404, content={"Error": "Video comment not found"})
-    return JSONResponse(content=db_video_comment.__dict__)
-
-@app.get("/videos/{video_id}/comments/")
-def read_video_comments_by_video(video_id: int, skip: int = 0, limit: int = 10, db: Session = Depends(get_db)):
-    video_comments = crud.get_video_comments_by_video(db, video_id=video_id, skip=skip, limit=limit)
-    return JSONResponse(content={"video_comments": [comment.__dict__ for comment in video_comments]})
-
 # Summarization endpoint
 @app.post("/summarize/")
 async def summarize_video_and_comments(
-    video_url: str = Body(..., embed=True),
+    videoURLS: VideoURLS = Body(
+        ..., description="List of video URLs to scrape comments from"),
     db: Session = Depends(get_db)
-):
-    if not video_url:
-        return JSONResponse(status_code=422, content={"Error": "video_url cannot be empty"})
+):  
+    if not videoURLS.URLS or len(videoURLS.URLS) == 0:
+        return JSONResponse(status=422 ,content={"Error": "videoURLS cannot be empty"})
 
-    # Check if video exists in database
-    db_video = db.query(models.Video).filter(models.Video.url == video_url).first()
-    
-    if db_video:
-        # Video exists, retrieve comments
-        comments = crud.get_video_comments_by_video(db, video_id=db_video.id)
-        return JSONResponse(content={
-            "video_summary": db_video.summary,
-            "comments": [comment.__dict__ for comment in comments]
-        })
-    else:
-        # Video doesn't exist, perform summarization
-        try:
-            video_summary = await summarize_video(video_url)
-            comment_summaries = await summarize_comments(video_url)
-        except Exception as e:
-            return JSONResponse(status_code=500, content={"Error": f"Summarization failed: {str(e)}"})
+    results = {}
+
+    for url in videoURLS.URLS:
+        # Check if video exists in database
+        db_video = db.query(models.Video).filter(models.Video.url == url).first()
         
-        # Store results in database
-        new_video = crud.create_video(db, schemas.VideoCreate(
-            user_id=1,  # Assuming a default user, you might want to handle this differently
-            url=video_url,
-            summary=video_summary
-        ))
-        
-        stored_comments = []
-        for comment_summary in comment_summaries:
-            stored_comment = crud.create_video_comment(db, schemas.VideoCommentCreate(
-                video_id=new_video.id,
-                summary=comment_summary.summary,
-                category_count=comment_summary.categoryCount,
-                comment_insights=comment_summary.commentInsights,
-                representative_comments=comment_summary.representativeComments
+        if db_video:
+            # Video exists, retrieve comments
+            comments = crud.get_video_comments_by_video(db, video_id=db_video.id)
+            comment_dicts = []
+            for comment in comments:
+                summary = comment.__dict__["summary"]
+                category_count = comment.__dict__["category_count"]
+                comment_insights = json.loads(comment.__dict__["comment_insights"])
+                representative_comments = json.loads(comment.__dict__["representative_comments"])
+                comment_dict = {
+                    "summary": summary,
+                    "categoryCount": category_count,
+                    "commentInsights": comment_insights,
+                    "representativeComments": representative_comments
+                }
+                comment_dicts.append(comment_dict)
+            results[url] = {
+                "video_summary": db_video.summary,
+                "title": db_video.title,
+                "categories": {comment.comment_category: comment_dict for comment, comment_dict in zip(comments, comment_dicts)}
+            }
+        else:
+            # Video doesn't exist, perform summarization
+            # try:
+            singleURLInput: VideoURLS = VideoURLS(URLS=[url])
+
+            video_summary = {"results": {url: {"summary": "Video summary"}}}["results"][url]["summary"]
+
+
+            data, err2 = summarize_comments_helper(threads=100, retries=3, scrapeCount=50, videoURLS=singleURLInput)
+            print(data)
+            if err2:
+                results[url] = {"Error": data["Error"]}
+                return JSONResponse(status=422, content=results)
+            else:
+                comment_summaries = data["results"][url]['categories']
+                title = data["results"][url]['title']
+            print(comment_summaries)
+            
+            # Store results in database
+            new_video = crud.create_video(db, schemas.VideoCreate(
+                url=url,
+                title=title,
+                summary=video_summary
             ))
-            stored_comments.append(stored_comment.__dict__)
-        
-        return JSONResponse(content={
-            "video_summary": video_summary,
-            "comments": stored_comments
-        })
+            
+            stored_comments = []
+            for comment_category, comment_summary in comment_summaries.items():
+                print(comment_category, comment_summary)
+                stored_comment = crud.create_video_comment(db, schemas.VideoCommentCreate(
+                    video_id=new_video.id,
+                    comment_category=comment_category,
+                    summary=comment_summary["summary"],
+                    category_count=comment_summary["categoryCount"],
+                    comment_insights=json.dumps(comment_summary.get("commentInsights", [''])),
+                    representative_comments=json.dumps(comment_summary.get("representativeComments", [''])),
+                ))
+                stored_comments.append(stored_comment.__dict__)
+            
+            results[url] = {
+                "video_summary": video_summary,
+                "title": title,
+                "categories": comment_summaries
+            }
+
+    return JSONResponse(content={"results": results})
 
 
 @app.post("/summarize/comments/")
@@ -164,8 +151,8 @@ def summarize_comments(
 
     """
     commentsummarizer: CommentSummary = CommentSummary()
-    if len(videoURLS.URLS) == 0:
-        return JSONResponse(status=422, content={"Error": "videoURLS cannot be empty"})
+    if not videoURLS.URLS or len(videoURLS.URLS) == 0:
+        return JSONResponse(status=422 ,content={"Error": "videoURLS cannot be empty"})
 
     results: dict = {}
     summaries: dict = {}
@@ -180,11 +167,10 @@ def summarize_comments(
             result: Dict[str, List[str]] = future.result()
             results.update(result)
 
-    # Replace all single quotes with double quotes to avoid JSON parsing issues
-    
-
     for key, value in results.items():
         summaries[key] = commentsummarizer.get_comments_summary(value["comments"])
+        # Add title
+        summaries[key]["title"] = value["comments"][0]["title"]
         
     return JSONResponse(content={"results": summaries})
 
@@ -208,7 +194,7 @@ Args:
 """
     videosummarizer: VideoSummary = VideoSummary()
 
-    if len(videoURLS.URLS)==0:
+    if not videoURLS.URLS or len(videoURLS.URLS) == 0:
         return JSONResponse(status=422 ,content={"Error": "videoURLS cannot be empty"})
 
     results = {}
@@ -262,7 +248,7 @@ def scrapeHandler(
 
         # Check if the necessary keys are in the response
         if data_json and "comments" in data_json and "has_more" in data_json:
-            data = [{"text": comment["text"], "likes": comment["digg_count"]} for comment in data_json["comments"] if comment.get("comment_language") == "en"]
+            data = [{"title": comment["share_info"]["title"] ,"text": comment["text"], "likes": comment["digg_count"]} for comment in data_json["comments"] if comment.get("comment_language") == "en"]
             has_more = bool(data_json["has_more"])
             return data, has_more, False
         else:
@@ -302,7 +288,44 @@ def scrapeManager(
     # Sort comments by digg_count in descending order and take the top 100
     sorted_comments = sorted(comments, key=lambda x: x["likes"], reverse=True)[:250]
 
-    print(sorted_comments)
-
     return {videoLink: {"comments": sorted_comments, "comment_count": len(sorted_comments)}}
 
+def summarize_video_helper(
+    videoURLS: VideoURLS,
+    threads: int = 100,
+    ) -> JSONResponse:
+
+    
+        
+
+def summarize_comments_helper(
+    videoURLS: VideoURLS,
+    threads: int = 100, 
+    retries: int = 3, 
+    scrapeCount: int = 50, 
+    ) -> JSONResponse:
+
+    commentsummarizer: CommentSummary = CommentSummary()
+
+    if not videoURLS.URLS or len(videoURLS.URLS) == 0:
+        return ({"Error": "videoURLS cannot be empty"}, True)
+
+    results: dict = {}
+    summaries: dict = {}
+
+    with ThreadPoolExecutor(max_workers=threads) as executor:
+        futures = [
+            executor.submit(scrapeManager, link, scrapeCount, retries)
+            for link in videoURLS.URLS
+        ]
+
+        for future in futures:
+            result: Dict[str, List[str]] = future.result()
+            results.update(result)
+
+    for key, value in results.items():
+        summaries[key] = commentsummarizer.get_comments_summary(value["comments"])
+        # Add title
+        summaries[key]["title"] = value["comments"][0]["title"]
+        
+    return ({"results": summaries}, False)
