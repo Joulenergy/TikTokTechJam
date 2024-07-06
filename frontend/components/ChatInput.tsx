@@ -1,22 +1,23 @@
 import React from 'react';
 import { TextInput, TextInputProps, ActionIcon, useMantineTheme, rem } from '@mantine/core';
 import { IconArrowRight } from '@tabler/icons-react';
-import { useState } from 'react';
+import { Dispatch, SetStateAction } from 'react';
 import { getHotkeyHandler } from '@mantine/hooks';
 
 interface ExtendedTextInputProps extends TextInputProps {
   fn: () => void;
   addMessage: (mess: string) => void;
+  setValue: Dispatch<SetStateAction<string>>;
+  value: string;
 }
 
 export function ChatInput(props: ExtendedTextInputProps) {
-  const { fn, addMessage, ...textInputProps } = props;
+  const { fn, addMessage, setValue, value, ...textInputProps } = props;
   const theme = useMantineTheme();
-  const [value, setValue] = useState('');
 
   const sendMessage = async () => {
     if (value.length <= 2) {
-      return
+      return;
     } else {
       fn();
       addMessage(value);
@@ -33,7 +34,6 @@ export function ChatInput(props: ExtendedTextInputProps) {
         padding: '10px',
       }}
     >
-      <p style={{ textAlign: 'left' }}>What would you like to explore about these videos?</p>
       <div style={{ marginBottom: '1rem' }}>
         <TextInput
           radius="xl"

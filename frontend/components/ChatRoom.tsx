@@ -23,18 +23,25 @@ const ChatRoom = () => {
 
   const getMessages = () => {
     const exists = localStorage.getItem('messages');
-    const messages = exists ? JSON.parse(exists) : [];
-    setMes(messages);
+    if (exists) {
+      const messages = JSON.parse(exists);
+      setMes(messages);
+    } else {
+      addMessage(
+        'Hello, I am CommentSense, your content crafting companion! What would you like to explore about the video(s)?',
+        true
+      );
+    }
     setloading(false);
     setTimeout(() => {
       goBot();
     }, 300);
   };
 
-  const addMessage = (mess: string) => {
+  const addMessage = (mess: string, bot = false) => {
     const exists = localStorage.getItem('messages');
     const messages = exists ? JSON.parse(exists) : [];
-    messages.push({ message: mess, user: true });
+    messages.push({ message: mess, user: !bot });
     localStorage.setItem('messages', JSON.stringify(messages));
     setMes(messages);
     // TODO: get chatbot reply from backend
@@ -43,6 +50,8 @@ const ChatRoom = () => {
   function goBot() {
     dummy.current?.scrollIntoView({ behavior: 'smooth' });
   }
+
+  const [value, setValue] = useState('');
 
   const { ref, inView } = useInView({
     /* Optional options */
@@ -73,7 +82,7 @@ const ChatRoom = () => {
                         <ChevronDown />
                       </ActionIcon>
                     </Paper>
-                    <FeaturesGrid />
+                    <FeaturesGrid setValue={setValue} goBot={goBot}/>
                   </Group>
 
                   {mes.map((msg, id) => {
@@ -84,7 +93,7 @@ const ChatRoom = () => {
                 <div ref={dummy}></div>
               </ScrollArea>
             </Stack>
-            <ChatInput fn={goBot} addMessage={addMessage} />
+            <ChatInput setValue={setValue} value={value} fn={goBot} addMessage={addMessage} />
           </Container>
         </>
       )}
