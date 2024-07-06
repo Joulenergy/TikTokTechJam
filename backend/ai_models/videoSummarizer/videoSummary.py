@@ -43,7 +43,7 @@ class VideoSummary:
         prompt = self.processor.apply_chat_template(conversation, add_generation_prompt=True)
 
         container = av.open(videoPath)
-        framesSampled = 8
+        framesSampled = 32
         total_frames = container.streams.video[0].frames
         indices = np.arange(0, total_frames, total_frames / framesSampled).astype(int)
         clip = self.read_video_pyav(container, indices)

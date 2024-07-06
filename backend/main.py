@@ -3,12 +3,15 @@ import requests
 import re
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
-from fastapi import Query, Body
+from fastapi import Query, Body, Depends
 from fastapi.responses import JSONResponse
-from backend import app
+from sqlalchemy.orm import Session  
+from backend import app, get_db
 from pydantic import BaseModel
 
-from .models import VideoSummary, CommentSummary
+from .ai_models import VideoSummary, CommentSummary
+from .sql_app import crud, models, schemas
+
 
 class VideoURLS(BaseModel):
     URLS: List[str]
@@ -20,9 +23,123 @@ def home():
     """
     return {"text": "Site is up!"}
 
+# User endpoints
+@app.post("/users/")
+def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
+    db_user = crud.get_user_by_email(db, email=user.email)
+    if db_user:
+        return JSONResponse(status_code=400, content={"Error": "Email already registered"})
+    return crud.create_user(db=db, user=user)
 
-@app.post("/summarise/comments/")
-def summarise_comments(
+@app.get("/users/")
+def read_users(skip: int = 0, limit: int = 10, db: Session = Depends(get_db)):
+    users = crud.get_users(db, skip=skip, limit=limit)
+    return JSONResponse(content={"users": [user.__dict__ for user in users]})
+
+@app.get("/users/{user_id}")
+def read_user(user_id: int, db: Session = Depends(get_db)):
+    db_user = crud.get_user(db, user_id=user_id)
+    if db_user is None:
+        return JSONResponse(status_code=404, content={"Error": "User not found"})
+    return JSONResponse(content=db_user.__dict__)
+
+# Video endpoints
+@app.post("/videos/")
+def create_video(video: schemas.VideoCreate, db: Session = Depends(get_db)):
+    return JSONResponse(content=crud.create_video(db=db, video=video).__dict__)
+
+@app.get("/videos/")
+def read_videos(skip: int = 0, limit: int = 10, db: Session = Depends(get_db)):
+    videos = crud.get_videos(db, skip=skip, limit=limit)
+    return JSONResponse(content={"videos": [video.__dict__ for video in videos]})
+
+@app.get("/videos/{video_id}")
+def read_video(video_id: int, db: Session = Depends(get_db)):
+    db_video = crud.get_video(db, video_id=video_id)
+    if db_video is None:
+        return JSONResponse(status_code=404, content={"Error": "Video not found"})
+    return JSONResponse(content=db_video.__dict__)
+
+@app.get("/users/{user_id}/videos/")
+def read_user_videos(user_id: int, skip: int = 0, limit: int = 10, db: Session = Depends(get_db)):
+    videos = crud.get_videos_by_user(db, user_id=user_id, skip=skip, limit=limit)
+    return JSONResponse(content={"videos": [video.__dict__ for video in videos]})
+
+# VideoComment endpoints
+@app.post("/video-comments/")
+def create_video_comment(video_comment: schemas.VideoCommentCreate, db: Session = Depends(get_db)):
+    return JSONResponse(content=crud.create_video_comment(db=db, video_comment=video_comment).__dict__)
+
+@app.get("/video-comments/")
+def read_video_comments(skip: int = 0, limit: int = 10, db: Session = Depends(get_db)):
+    video_comments = crud.get_video_comments(db, skip=skip, limit=limit)
+    return JSONResponse(content={"video_comments": [comment.__dict__ for comment in video_comments]})
+
+@app.get("/video-comments/{comment_id}")
+def read_video_comment(comment_id: int, db: Session = Depends(get_db)):
+    db_video_comment = crud.get_video_comment(db, comment_id=comment_id)
+    if db_video_comment is None:
+        return JSONResponse(status_code=404, content={"Error": "Video comment not found"})
+    return JSONResponse(content=db_video_comment.__dict__)
+
+@app.get("/videos/{video_id}/comments/")
+def read_video_comments_by_video(video_id: int, skip: int = 0, limit: int = 10, db: Session = Depends(get_db)):
+    video_comments = crud.get_video_comments_by_video(db, video_id=video_id, skip=skip, limit=limit)
+    return JSONResponse(content={"video_comments": [comment.__dict__ for comment in video_comments]})
+
+# Summarization endpoint
+@app.post("/summarize/")
+async def summarize_video_and_comments(
+    video_url: str = Body(..., embed=True),
+    db: Session = Depends(get_db)
+):
+    if not video_url:
+        return JSONResponse(status_code=422, content={"Error": "video_url cannot be empty"})
+
+    # Check if video exists in database
+    db_video = db.query(models.Video).filter(models.Video.url == video_url).first()
+    
+    if db_video:
+        # Video exists, retrieve comments
+        comments = crud.get_video_comments_by_video(db, video_id=db_video.id)
+        return JSONResponse(content={
+            "video_summary": db_video.summary,
+            "comments": [comment.__dict__ for comment in comments]
+        })
+    else:
+        # Video doesn't exist, perform summarization
+        try:
+            video_summary = await summarize_video(video_url)
+            comment_summaries = await summarize_comments(video_url)
+        except Exception as e:
+            return JSONResponse(status_code=500, content={"Error": f"Summarization failed: {str(e)}"})
+        
+        # Store results in database
+        new_video = crud.create_video(db, schemas.VideoCreate(
+            user_id=1,  # Assuming a default user, you might want to handle this differently
+            url=video_url,
+            summary=video_summary
+        ))
+        
+        stored_comments = []
+        for comment_summary in comment_summaries:
+            stored_comment = crud.create_video_comment(db, schemas.VideoCommentCreate(
+                video_id=new_video.id,
+                summary=comment_summary.summary,
+                category_count=comment_summary.categoryCount,
+                comment_insights=comment_summary.commentInsights,
+                representative_comments=comment_summary.representativeComments
+            ))
+            stored_comments.append(stored_comment.__dict__)
+        
+        return JSONResponse(content={
+            "video_summary": video_summary,
+            "comments": stored_comments
+        })
+
+
+@app.post("/summarize/comments/")
+def summarize_comments(
     threads: int = Query(100, description="Number of threads to use for scraping"),
     retries: int = Query(3, description="Number of retries for each video URL"),
     scrapeCount: int = Query(
@@ -46,7 +163,7 @@ def summarise_comments(
     - videoURLS (list[str]): List of video URLs to scrape comments from
 
     """
-    commentSummariser: CommentSummary = CommentSummary()
+    commentsummarizer: CommentSummary = CommentSummary()
     if len(videoURLS.URLS) == 0:
         return JSONResponse(status=422, content={"Error": "videoURLS cannot be empty"})
 
@@ -67,13 +184,13 @@ def summarise_comments(
     
 
     for key, value in results.items():
-        summaries[key] = commentSummariser.get_comments_summary(value["comments"])
+        summaries[key] = commentsummarizer.get_comments_summary(value["comments"])
         
     return JSONResponse(content={"results": summaries})
 
 
-@app.post("/summarise/videos/")
-async def summarise_video(
+@app.post("/summarize/videos/")
+async def summarize_video(
     threads: int = Query(100, description="Number of threads to use for summarisation"),
     videoURLS: VideoURLS = Body(
         ..., description="List of video URLs to scrape comments from")
@@ -89,7 +206,7 @@ Args:
 
 - videoURLS (list[str]): List of video URLs to get video summaries from
 """
-    videoSummariser: VideoSummary = VideoSummary()
+    videosummarizer: VideoSummary = VideoSummary()
 
     if len(videoURLS.URLS)==0:
         return JSONResponse(status=422 ,content={"Error": "videoURLS cannot be empty"})
@@ -98,7 +215,7 @@ Args:
 
     with ThreadPoolExecutor(max_workers=threads) as executor:
         futures = [
-            executor.submit(videoSummariser.get_video_summary, link)
+            executor.submit(videosummarizer.get_video_summary, link)
             for link in videoURLS.URLS
         ]
 
@@ -183,7 +300,7 @@ def scrapeManager(
             retries = 0
 
     # Sort comments by digg_count in descending order and take the top 100
-    sorted_comments = sorted(comments, key=lambda x: x["likes"], reverse=True)[:100]
+    sorted_comments = sorted(comments, key=lambda x: x["likes"], reverse=True)[:250]
 
     print(sorted_comments)
 
