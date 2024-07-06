@@ -1,17 +1,11 @@
 // pages/chat.tsx
 
-import NavBar from '@/components/Navbar';
-import { InputWithButton1 } from '../components/InputWithButton1';
-import { FeaturesGrid } from '../components/FeaturesGrid';
-import { CommentSimple } from '../components/CommentSimple';
+import ChatRoom from '@/components/ChatRoom';
 
 export default function AnotherPage() {
   return (
     <>
-      <NavBar />
-      <CommentSimple />
-      <FeaturesGrid />
-      <InputWithButton1 />
+      <ChatRoom />
     </>
   );
 }

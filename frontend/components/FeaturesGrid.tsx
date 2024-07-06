@@ -1,71 +1,69 @@
-import { ThemeIcon, Text, Title, Container, SimpleGrid, rem } from '@mantine/core';
-import { IconGauge, IconCookie, IconUser, IconMessage2, IconLock } from '@tabler/icons-react';
-import classes from './FeaturesGrid.module.css';
+import { useMantineColorScheme, ThemeIcon, Text, Container, SimpleGrid, rem } from '@mantine/core';
+import { IconMessage, IconBulb, IconMoodSearch } from '@tabler/icons-react';
+import { Dispatch, SetStateAction } from 'react';
 
-export const MOCKDATA = [
+export const prompts = [
   {
-    icon: IconGauge,
-    title: 'suggestion1',
-    description:
-      'nomnomnom nomnomnom nomnomnom nomnomnom',
+    icon: IconMessage,
+    title: 'summarise video comments',
   },
   {
-    icon: IconUser,
-    title: 'suggestion2',
-    description:
-      'omnomnomn omnomnomn omnomnomn omnomnomn',
+    icon: IconMoodSearch,
+    title: 'conduct sentiment analysis',
   },
   {
-    icon: IconCookie,
-    title: 'suggestion3',
-
-    description:
-      'hehehehehe hehehehehe hehehehehe hehehehehe',
+    icon: IconBulb,
+    title: 'suggest new ideas for future videos',
   },
-  {
-    icon: IconCookie,
-    title: 'suggestion4',
-    description:
-      'hehehehehe hehehehehe hehehehehe hehehehehe',
-  }
-
 ];
 
 interface FeatureProps {
   icon: React.FC<any>;
-  title: React.ReactNode;
-  description: React.ReactNode;
+  title: string;
+  setValue: Dispatch<SetStateAction<string>>;
+  goBot: () => void;
 }
 
-export function Feature({ icon: Icon, title, description }: FeatureProps) {
+function Feature({ icon: Icon, title, setValue, goBot }: FeatureProps) {
+  const { colorScheme } = useMantineColorScheme();
+  const changeChatInput = (prompt: string) => {
+    setValue(prompt);
+    goBot();
+  };
   return (
-    <div>
+    <div
+      style={{
+        background: colorScheme === 'dark' ? '#2C2E33' : '#f0f0f0',
+        border: `1px solid ${colorScheme === 'dark' ? '#4A4A4A' : '#e0e0e0'}`,
+        padding: '10px',
+        borderRadius: '10px',
+        display: 'inline-block',
+        cursor: 'pointer',
+        transition: 'background-color 0.3s ease',
+      }}
+      onClick={() => {
+        changeChatInput(title);
+      }}
+    >
       <ThemeIcon variant="light" size={40} radius={40}>
         <Icon style={{ width: rem(18), height: rem(18) }} stroke={1.5} />
       </ThemeIcon>
       <Text mt="sm" mb={7}>
         {title}
       </Text>
-      <Text size="sm" c="dimmed" lh={1.6}>
-        {description}
-      </Text>
     </div>
   );
 }
 
-export function FeaturesGrid() {
-  const features = MOCKDATA.map((feature, index) => <Feature {...feature} key={index} />);
+export function FeaturesGrid(props: any) {
+  const { setValue, goBot } = props;
+  const features = prompts.map((feature, index) => (
+    <Feature {...feature} key={index} setValue={setValue} goBot={goBot} />
+  ));
 
   return (
-    <Container className={classes.wrapper}>
-      <SimpleGrid
-        mt={60}
-        cols={{ base: 1, sm: 2, md: 3 }}
-        // spacing={{ base: 'xl', md: 50 }}
-        // verticalSpacing={{ base: 'xl', md: 50 }}
-      >
-        {features}
-      </SimpleGrid>
+    <Container>
+      <SimpleGrid cols={{ base: 3, sm: 3, md: 3 }}>{features}</SimpleGrid>
     </Container>
   );
 }

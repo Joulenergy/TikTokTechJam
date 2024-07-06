@@ -20,7 +20,7 @@ export function InputWithButton(props: TextInputProps) {
         display: 'flex',
         flexDirection: 'column', // Align items in a column
         justifyContent: 'center',
-        // padding: '10px',
+        padding: '10px',
         // height: '85vh', // This makes the div take up the full viewport height
       }}
     >
