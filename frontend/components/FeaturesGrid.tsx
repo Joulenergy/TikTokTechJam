@@ -52,7 +52,8 @@ export function FeaturesGrid() {
   return (
     <Container>
       <SimpleGrid
-        cols={{ base: 1, sm: 2, md: 3 }}
+        cols={{ base: 3, sm: 3, md: 3 }}
+        // cols={{ base: 1, sm: 2, md: 3 }}
         // spacing={{ base: 'xl', md: 50 }}
         // verticalSpacing={{ base: 'xl', md: 50 }}
       >

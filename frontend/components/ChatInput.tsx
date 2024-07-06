@@ -2,7 +2,7 @@ import React from 'react';
 import { TextInput, TextInputProps, ActionIcon, useMantineTheme, rem } from '@mantine/core';
 import { IconArrowRight } from '@tabler/icons-react';
 import { useState } from 'react';
-import { getHotkeyHandler } from "@mantine/hooks";
+import { getHotkeyHandler } from '@mantine/hooks';
 
 interface ExtendedTextInputProps extends TextInputProps {
   fn: () => void;
@@ -15,9 +15,13 @@ export function ChatInput(props: ExtendedTextInputProps) {
   const [value, setValue] = useState('');
 
   const sendMessage = async () => {
-    fn();
-    addMessage(value);
-    setValue('');
+    if (value.length <= 2) {
+      return
+    } else {
+      fn();
+      addMessage(value);
+      setValue('');
+    }
   };
 
   return (
@@ -44,7 +48,7 @@ export function ChatInput(props: ExtendedTextInputProps) {
               radius="xl"
               color={theme.primaryColor}
               variant="filled"
-              onClick={sendMessage} 
+              onClick={sendMessage}
               style={{ cursor: 'pointer' }}
             >
               <IconArrowRight style={{ width: rem(18), height: rem(18) }} stroke={1.5} />
@@ -54,8 +58,8 @@ export function ChatInput(props: ExtendedTextInputProps) {
             !/\S/.test(value)
               ? undefined
               : value.length < 2
-              ? undefined
-              : getHotkeyHandler([["Enter", sendMessage]])
+                ? undefined
+                : getHotkeyHandler([['Enter', sendMessage]])
           }
           {...textInputProps}
         />

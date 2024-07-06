@@ -1,7 +1,7 @@
 import { ActionIcon, useMantineColorScheme } from "@mantine/core";
 import { MoonStars, Sun } from 'tabler-icons-react';
 
-const DarkMode = () => {
+const ToggleColour = () => {
   const { colorScheme, toggleColorScheme } = useMantineColorScheme();
   const dark = colorScheme === "dark";
   return (
@@ -16,4 +16,4 @@ const DarkMode = () => {
   );
 };
 
-export default DarkMode;
+export default ToggleColour;

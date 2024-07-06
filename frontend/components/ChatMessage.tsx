@@ -17,9 +17,9 @@ const ChatMessage = (props: any) => {
 
   return (
     <>
-      <Group position={message} align="flex-end">
+      <Group justify={message} align="flex-end">
         <Stack p={0} spacing={2} sx={{ maxWidth: '80%' }} align="flex-end">
-          <Group position={message} align="flex-end" spacing="xs">
+          <Group justify={message} align="flex-end" spacing="xs" wrap="nowrap">
             <Image
               src={logo}
               height={35}
@@ -28,7 +28,7 @@ const ChatMessage = (props: any) => {
               hidden={message === 'right' ? true : false}
             />
             <Stack p={0} spacing={0} m={0}>
-              <Group position={message} spacing={3} align="center">
+              <Group justify={message} spacing={3} align="center">
                 <Alert sx={{}} color={color} radius="lg" py={8} variant="light">
                   {text}
                 </Alert>
