@@ -70,7 +70,7 @@ class VideoFeedbackAgent:
         )
 
     def generate_feedback(self, video, comments, user_input, session_id, url):
-        video_summary = f"Title: {video.title}\nSummary: {video.summary}\nURL: {url}"
+        video_summary = f"Title: {video.title}\nURL: {url}"
         
         comments_summary = "\n\n".join([
             f"Category: {comment.comment_category}\n"
