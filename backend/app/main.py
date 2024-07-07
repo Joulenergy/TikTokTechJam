@@ -11,6 +11,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 import json
 
 from fastapi import FastAPI, Query, Body, Depends
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session  
 from pydantic import BaseModel
@@ -38,6 +39,15 @@ def get_db():
 models.Base.metadata.create_all(bind=engine)
 
 app=create_app()
+
+# Add CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000"],  # Allow your Next.js app's origin
+    allow_credentials=True,
+    allow_methods=["*"],  # You can restrict this to specific HTTP methods if needed
+    allow_headers=["*"],  # You can restrict this to specific headers if needed
+)
 
 agent = VideoFeedbackAgent()
 
