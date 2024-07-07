@@ -1,5 +1,7 @@
 import os
-from transformers import LlavaNextVideoProcessor, LlavaNextVideoForConditionalGeneration, BitsAndBytesConfig
+from transformers import LlavaNextVideoProcessor, LlavaNextVideoForConditionalGeneration
+from transformers.utils import quantization_config
+import torch
 
 model_dir = os.path.dirname(os.path.realpath(__file__)) + "/llava-next/"
 
@@ -11,7 +13,9 @@ class Model:
         pass
   
     def load_model():
-        model = LlavaNextVideoForConditionalGeneration.from_pretrained(model_dir)
+        model = LlavaNextVideoForConditionalGeneration.from_pretrained(
+            model_dir
+        )
         return model
 
     def load_processor():

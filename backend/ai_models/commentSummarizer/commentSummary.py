@@ -23,6 +23,7 @@ class CommentSummary:
         # Load the environment variables
         load_dotenv()
         os.environ["GROQ_API_KEY"] = os.getenv("GROQ_API_KEY")
+        os.environ["GOOGLE_API_KEY"] = os.getenv("GOOGLE_API_KEY")
 
         # self.model = ChatGroq(model="llama3-8b-8192", temperature=0)
         self.model = ChatGoogleGenerativeAI(model="gemini-1.5-pro", temperature=0)

@@ -10,7 +10,7 @@ import pytest
         "https://www.tiktok.com/@youcureofficial/video/7384306298176785707",
     ])
 def test_scrape_comments(client, urls, capsys):
-    endpoint = "/videos/comments/"
+    endpoint = "/summarize/comments/"
 
     with capsys.disabled():
         payload = {"URLS": [urls]}
@@ -23,7 +23,6 @@ def test_scrape_comments(client, urls, capsys):
         assert urls in response.json()['result']
         # Make sure response JSON is in the expected format
         assert 'comments' in response.json()['result'][urls]
-        print(response.json()['result'][urls]['comments'])
         assert 'comment_count' in response.json()['result'][urls]
 
 @pytest.mark.parametrize('urls',  
@@ -35,7 +34,7 @@ def test_scrape_comments(client, urls, capsys):
         "https://www.tiktok.com/@youcureofficial/video/7384306298176785707",
     ])
 def test_summarise_videos(client, urls, capsys):
-    endpoint = "/videos/summarise/"
+    endpoint = "/summarize/videos/"
 
     with capsys.disabled():
         payload = {"URLS": [urls]}
