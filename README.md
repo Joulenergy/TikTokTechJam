@@ -23,7 +23,9 @@ docker-compose build
 docker-compose up -d
 ```
 
-## Key Features
+## Description
+
+### Key Features
 1. Automated Content Analysis: Users input a TikTok video URL, triggering a multi-step analysis process.
 
 2. Comment Scraping and Clustering: The system extracts comments from the video and uses machine learning to categorize them into meaningful groups.
@@ -34,7 +36,7 @@ docker-compose up -d
 
 5. AI-Powered Interactive Assistant: An intelligent chatbot with agentic properties provides users with tailored feedback and answers based on the analyzed video context and user queries.
 
-## Data Flow
+### Data Flow
 1. User inputs TikTok URL in frontend
    
 2. Backend receives URL and initiates scraping and analysis process
@@ -48,3 +50,31 @@ docker-compose up -d
 6. Chat agent retrieves context from the database
    
 7. User interacts with the chat agent, which provides responses based on the video context and user queries
+
+### Development tools used to build the project
+| Development Tools | Purpose |
+| ----------------- | ------- |
+| Next.js | Frontend |
+| FastAPI | Backend | 
+| SQLite | Database |
+| Docker | Containerization |
+| Git | Version Control |
+
+### APIs
+- TikTok API: Extracting video data and comments
+- Gemini API: For summarizing comments and chatbot
+
+### Assets
+- Video Data: Extracted from TikTok videos
+
+### Libraries
+| Libraries | Purpose |
+| --------- | ------- |
+| BeautifulSoup | Parsing Extracted Comments |
+| SQLAlchemy | ORM for db |
+| fastapi | Backend |
+| Langchain | Build Chatbot |
+| HuggingFace | For Llava model |
+
+### Relevant Problem Statement
+Our product addresses the challenge of inspiring creativity among content creators by leveraging a generative AI-powered chatbot. This innovative solution is designed to push creative boundaries and provide valuable, real-time feedback, enabling creators to enhance their content and engage more effectively with their audience.
