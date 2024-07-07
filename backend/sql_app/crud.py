@@ -38,3 +38,9 @@ def create_video_comment(db: Session, video_comment: schemas.VideoCommentCreate)
     db.commit()
     db.refresh(db_video_comment)
     return db_video_comment
+
+def get_video_by_url(db: Session, url: str):
+    return db.query(models.Video).filter(models.Video.url == url).first()
+
+def get_comments_by_video_id(db: Session, video_id: int):
+    return db.query(models.VideoComment).filter(models.VideoComment.video_id == video_id).all()
