@@ -13,21 +13,21 @@ const NavBar = () => {
   };
 
   return (
-    <>
+    <div>
       <Paper radius={0}>
         <Group justify="apart" p="sm" align="center">
           <Text variant="gradient" gradient={{ from: 'orange', to: 'grape', deg: 90 }}>
-            <Group align="center" gap={3}>
-              <UnstyledButton onClick={handleButtonClick}>
-                <Title>CommentSense</Title>
-              </UnstyledButton>
-              <Image height={30} width={30} src={logo} alt="CommentSense Logo" />
-            </Group>
           </Text>
+          <Group align="center" gap={3}>
+            <UnstyledButton onClick={handleButtonClick}>
+              <Title>CommentSense</Title>
+            </UnstyledButton>
+            <Image height={30} width={30} src={logo} alt="CommentSense Logo" />
+          </Group>
           <ToggleColour />
         </Group>
       </Paper>
-    </>
+    </div>
   );
 };
 

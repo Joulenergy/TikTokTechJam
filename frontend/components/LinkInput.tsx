@@ -12,8 +12,36 @@ export function LinkInput() {
 
   const handleButtonClick = () => {
     // Navigate to the desired page here
-    // TODO: send post request with value
-    router.push('./chat');
+
+    // Check if the link is in the valid format
+    if (value.length === 0) {
+      alert('Please enter a valid link!');
+      return;
+    }
+
+    const endpoint = 'http://localhost:8000/summarize/';
+
+    // call the API
+    fetch(endpoint, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        URLS: value,
+      }),
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        console.log('Success:', data);
+        router.push('./chat');
+      })
+      .catch((error) => {
+        console.error('Error:', error);
+        alert('There was an error processing your request. Please try again later.');
+      });
+
+    
   };
 
   return (
