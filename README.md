@@ -75,6 +75,10 @@ docker-compose up -d
 | fastapi | Backend |
 | Langchain | Build Chatbot |
 | HuggingFace | For Llava model |
+| Mantine | Frontend Aesthetics |
+| React | Tabler Icons, Hot Toast |
+| NextJS | Image and Routers |
+| Typescript | For next.js |
 
 ### Relevant Problem Statement
 Our product addresses the challenge of inspiring creativity among content creators by leveraging a generative AI-powered chatbot. This innovative solution is designed to push creative boundaries and provide valuable, real-time feedback, enabling creators to enhance their content and engage more effectively with their audience.
