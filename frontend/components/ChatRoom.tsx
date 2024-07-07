@@ -46,9 +46,11 @@ const ChatRoom = () => {
     setMes(messages);
 
     if (!bot) {
+      const API_URL = process.env.API_URL || 'http://localhost:8000';
+      const endpoint = `${API_URL}/chat/`;
       // Send POST request to the backend
       try {
-        const response = await fetch('http://localhost:8000/chat', {
+        const response = await fetch(endpoint, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -95,7 +97,7 @@ const ChatRoom = () => {
           <Container size="800px" mx="auto">
             <NavBar />
             <Stack p={0}>
-              <ScrollArea p="xs" scrollbarSize={1} sx={{ height: '84vh' }}>
+              <ScrollArea p="xs" scrollbarSize={1}>
                 <Stack>
                   <Group hidden={inView} pt="xs">
                     <Paper

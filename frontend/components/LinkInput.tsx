@@ -19,7 +19,8 @@ export function LinkInput() {
       return;
     }
 
-    const endpoint = 'http://localhost:8000/summarize/';
+    const API_URL = process.env.API_URL || 'http://localhost:8000';
+    const endpoint = `${API_URL}/summarize/`;
 
     // call the API
     fetch(endpoint, {
@@ -41,6 +42,7 @@ export function LinkInput() {
       })
       .catch((error) => {
         console.error('Error:', error);
+        console.log(error.message)
         alert('There was an error processing your request. Please try again later.');
       });
 
