@@ -17,11 +17,11 @@ const NavBar = () => {
       <Paper radius={0}>
         <Group justify="apart" p="sm" align="center">
           <Text variant="gradient" gradient={{ from: 'orange', to: 'grape', deg: 90 }}>
-          </Text>
-          <Group align="center" gap={3}>
             <UnstyledButton onClick={handleButtonClick}>
               <Title>CommentSense</Title>
             </UnstyledButton>
+          </Text>
+          <Group align="center" gap={3}>
             <Image height={30} width={30} src={logo} alt="CommentSense Logo" />
           </Group>
           <ToggleColour />

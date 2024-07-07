@@ -34,6 +34,9 @@ export function LinkInput() {
       .then((response) => response.json())
       .then((data) => {
         console.log('Success:', data);
+        // Get the first key insdie data['results']
+        const url = Object.keys(data['results'])[0];
+        localStorage.setItem('context', url);
         router.push('./chat');
       })
       .catch((error) => {

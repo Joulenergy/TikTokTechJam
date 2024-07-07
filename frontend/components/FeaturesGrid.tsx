@@ -6,25 +6,29 @@ export const prompts = [
   {
     icon: IconMessage,
     title: 'summarise video comments',
+    value: 'Can you provide the title of the video and a summary of its content?'
   },
   {
     icon: IconMoodSearch,
     title: 'conduct sentiment analysis',
+    value: 'What is the general sentiment of the comments on the video?'
   },
   {
     icon: IconBulb,
     title: 'suggest new ideas for future videos',
+    value: 'What are some constructive suggestions for future content?'
   },
 ];
 
 interface FeatureProps {
   icon: React.FC<any>;
   title: string;
+  value: string;
   setValue: Dispatch<SetStateAction<string>>;
   goBot: () => void;
 }
 
-function Feature({ icon: Icon, title, setValue, goBot }: FeatureProps) {
+function Feature({ icon: Icon, title, value, setValue, goBot }: FeatureProps) {
   const { colorScheme } = useMantineColorScheme();
   const changeChatInput = (prompt: string) => {
     setValue(prompt);
@@ -42,7 +46,7 @@ function Feature({ icon: Icon, title, setValue, goBot }: FeatureProps) {
         transition: 'background-color 0.3s ease',
       }}
       onClick={() => {
-        changeChatInput(title);
+        changeChatInput(value);
       }}
     >
       <ThemeIcon variant="light" size={40} radius={40}>

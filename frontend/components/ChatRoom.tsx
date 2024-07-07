@@ -38,13 +38,40 @@ const ChatRoom = () => {
     }, 300);
   };
 
-  const addMessage = (mess: string, bot = false) => {
+  const addMessage = async (mess: string, bot = false) => {
     const exists = localStorage.getItem('messages');
     const messages = exists ? JSON.parse(exists) : [];
     messages.push({ message: mess, user: !bot });
     localStorage.setItem('messages', JSON.stringify(messages));
     setMes(messages);
-    // TODO: get chatbot reply from backend
+
+    if (!bot) {
+      // Send POST request to the backend
+      try {
+        const response = await fetch('http://localhost:8000/chat', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            url: localStorage.getItem('context'),
+            user_input: mess,
+            chat_history: true,
+          }),
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          console.log(data);
+          // Add bot's response to the chat
+          addMessage(data.feedback, true);
+        } else {
+          console.error('Failed to get response from the server');
+        }
+      } catch (error) {
+        console.error('Error:', error);
+      }
+    }
   };
 
   function goBot() {
