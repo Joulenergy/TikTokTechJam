@@ -2,9 +2,9 @@ import { Center, Group, Kbd, Loader, Stack, Text } from "@mantine/core";
 
 const Loading = () => {
   return (
-    <Center sx={{ flexGrow: 1 }}>
+    <Center>
       <Stack align="center" >
-        <Text weight={550}>Stuck on loading? just press</Text>
+        <Text>Stuck on loading? just press</Text>
         <Group>
           <Kbd>ctrl</Kbd> + <Kbd>R</Kbd>
         </Group>

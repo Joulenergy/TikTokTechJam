@@ -1,16 +1,18 @@
-import React from 'react';
-import { TextInput, TextInputProps, ActionIcon, useMantineTheme, rem, Image } from '@mantine/core';
+import React, { useState } from 'react';
+import { ActionIcon, useMantineTheme, rem, Image, TagsInput } from '@mantine/core';
 import { IconSearch, IconArrowRight } from '@tabler/icons-react';
-import logo from '../public/logo.png'; // Replace with the correct path to your logo file
+import logo from '../public/logo.png';
 import NextImage from 'next/image';
-import { useRouter } from 'next/router'; // Import useRouter hook from Next.js
+import { useRouter } from 'next/router';
 
-export function InputWithButton(props: TextInputProps) {
+export function LinkInput() {
   const theme = useMantineTheme();
   const router = useRouter();
+  const [value, setValue] = useState<string[]>([]);
 
   const handleButtonClick = () => {
     // Navigate to the desired page here
+    // TODO: send post request with value
     router.push('./chat');
   };
 
@@ -18,10 +20,9 @@ export function InputWithButton(props: TextInputProps) {
     <div
       style={{
         display: 'flex',
-        flexDirection: 'column', // Align items in a column
+        flexDirection: 'column',
         justifyContent: 'center',
         padding: '10px',
-        // height: '85vh', // This makes the div take up the full viewport height
       }}
     >
       <div style={{ marginBottom: '1rem' }}>
@@ -31,11 +32,17 @@ export function InputWithButton(props: TextInputProps) {
       </div>
       <p style={{ textAlign: 'center' }}>What would you like me to analyse today?</p>
       <div style={{ marginBottom: '1rem' }}>
-        <TextInput
-          radius="xl"
+        <TagsInput
+          styles={(theme) => ({
+            input: {
+              borderRadius: theme.radius.md,
+            },
+          })}
           size="md"
-          placeholder="Type in the video links here!"
-          rightSectionWidth={42}
+          placeholder="Paste up to 3 links here!"
+          maxTags={3}
+          value={value} 
+          onChange={setValue}
           leftSection={<IconSearch style={{ width: rem(18), height: rem(18) }} stroke={1.5} />}
           rightSection={
             <ActionIcon
@@ -43,17 +50,16 @@ export function InputWithButton(props: TextInputProps) {
               radius="xl"
               color={theme.primaryColor}
               variant="filled"
-              onClick={handleButtonClick} // Add onClick handler to navigate to another page
-              style={{ cursor: 'pointer' }} // Optional: Show pointer cursor on hover
+              onClick={handleButtonClick}
+              style={{ cursor: 'pointer' }}
             >
               <IconArrowRight style={{ width: rem(18), height: rem(18) }} stroke={1.5} />
             </ActionIcon>
           }
-          {...props}
         />
       </div>
     </div>
   );
 }
 
-export default InputWithButton;
+export default LinkInput;

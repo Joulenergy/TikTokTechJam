@@ -67,16 +67,15 @@ const ChatRoom = () => {
         <>
           <Container size="800px" mx="auto">
             <NavBar />
-            <Stack sx={{ height: '84vh' }} p={0}>
+            <Stack p={0}>
               <ScrollArea p="xs" scrollbarSize={1} sx={{ height: '84vh' }}>
                 <Stack>
-                  <Group hidden={inView} position="center" pt="xs">
+                  <Group hidden={inView} pt="xs">
                     <Paper
                       shadow="md"
                       radius="xl"
                       withBorder
                       p={0}
-                      sx={{ position: 'absolute', top: '95%' }}
                     >
                       <ActionIcon color="violet" radius="xl" onClick={goBot}>
                         <ChevronDown />
