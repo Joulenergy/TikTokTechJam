@@ -1,1 +1,1 @@
-from .commentSummary import CommentSummary
+from .commentSummary import CommentSummary, PromptResponse
