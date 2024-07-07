@@ -29,6 +29,7 @@ docker build -t frontend .
 ```
 cd backend/
 docker build -t server .
+docker run -d --name server --env-file .env  -p 8000:8000 server
 ```
 
 ### 4. Run Docker Compose

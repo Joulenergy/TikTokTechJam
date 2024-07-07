@@ -1,20 +1,43 @@
+import os
+import sys
+
+script_dir = os.path.dirname(os.path.abspath(__file__))
+sys.path.append(script_dir)
+
 from typing import List, Dict
 import requests
 import re
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import json
 
-from fastapi import Query, Body, Depends
+from fastapi import FastAPI, Query, Body, Depends
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session  
-from backend import app, get_db
 from pydantic import BaseModel
 
-from .ai_models import VideoSummary, CommentSummary
+from .ai_models import CommentSummary
 from .sql_app import crud, models, schemas
+from .sql_app.database import SessionLocal, engine
 from .agents import VideoFeedbackAgent
 
 from datetime import datetime
+
+def create_app():
+    app=FastAPI()
+    app.state.my_state=False
+
+    return app
+
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
+models.Base.metadata.create_all(bind=engine)
+
+app=create_app()
 
 agent = VideoFeedbackAgent()
 
@@ -111,12 +134,8 @@ async def summarize_video_and_comments(
             # try:
             singleURLInput: VideoURLS = VideoURLS(URLS=[url])
 
-            video_summary = {"results": {url: {"summary": "Video summary"}}}["results"][url]["summary"]
-
-
-            data, err2 = summarize_comments_helper(threads=100, retries=3, scrapeCount=50, videoURLS=singleURLInput)
-            print(data)
-            if err2:
+            data, err = summarize_comments_helper(threads=100, retries=3, scrapeCount=50, videoURLS=singleURLInput)
+            if err:
                 results[url] = {"Error": data["Error"]}
                 return JSONResponse(status=422, content=results)
             else:
@@ -128,7 +147,7 @@ async def summarize_video_and_comments(
             new_video = crud.create_video(db, schemas.VideoCreate(
                 url=url,
                 title=title,
-                summary=video_summary
+                summary=""
             ))
             
             stored_comments = []
@@ -145,100 +164,12 @@ async def summarize_video_and_comments(
                 stored_comments.append(stored_comment.__dict__)
             
             results[url] = {
-                "video_summary": video_summary,
+                "video_summary": "",
                 "title": title,
                 "categories": comment_summaries
             }
 
     return JSONResponse(content={"results": results})
-
-
-@app.post("/summarize/comments/")
-def summarize_comments(
-    threads: int = Query(100, description="Number of threads to use for scraping"),
-    retries: int = Query(3, description="Number of retries for each video URL"),
-    scrapeCount: int = Query(
-        50, description="Number of comments to scrape per request"),
-    videoURLS: VideoURLS = Body(
-        ..., description="List of video URLs to scrape comments from")
-    ) -> JSONResponse:
-    """
-    API to scrape comments from a list of video URLs scraping approximately 150±50 comments per second
-
-    Returns a JSON object with the video URL as the key and a dictionary of comments as the value
-
-    Args:
-
-    - threads (int): Number of threads to use for scraping
-
-    - retries (int): Number of retries for each video URL
-
-    - scrapeCount (int): Number of comments to scrape per request
-
-    - videoURLS (list[str]): List of video URLs to scrape comments from
-
-    """
-    commentsummarizer: CommentSummary = CommentSummary()
-    if not videoURLS.URLS or len(videoURLS.URLS) == 0:
-        return JSONResponse(status=422 ,content={"Error": "videoURLS cannot be empty"})
-
-    results: dict = {}
-    summaries: dict = {}
-
-    with ThreadPoolExecutor(max_workers=threads) as executor:
-        futures = [
-            executor.submit(scrapeManager, link, scrapeCount, retries)
-            for link in videoURLS.URLS
-        ]
-
-        for future in futures:
-            result: Dict[str, List[str]] = future.result()
-            results.update(result)
-
-    for key, value in results.items():
-        summaries[key] = commentsummarizer.get_comments_summary(value["comments"])
-        # Add title
-        summaries[key]["title"] = value["comments"][0]["title"]
-        
-    return JSONResponse(content={"results": summaries})
-
-
-@app.post("/summarize/videos/")
-async def summarize_video(
-    threads: int = Query(100, description="Number of threads to use for summarisation"),
-    videoURLS: VideoURLS = Body(
-        ..., description="List of video URLs to scrape comments from")
-    ) -> JSONResponse:
-    """
-API to get summary of a video from a list of video URLS
-
-Returns a JSON object with the video URL as the key and a string of the summary
-
-Args:
-
-- threads (int): Number of threads to use for summarisation
-
-- videoURLS (list[str]): List of video URLs to get video summaries from
-"""
-    videosummarizer: VideoSummary = VideoSummary()
-
-    if not videoURLS.URLS or len(videoURLS.URLS) == 0:
-        return JSONResponse(status=422 ,content={"Error": "videoURLS cannot be empty"})
-
-    results = {}
-
-    with ThreadPoolExecutor(max_workers=threads) as executor:
-        futures = [
-            executor.submit(videosummarizer.get_video_summary, link)
-            for link in videoURLS.URLS
-        ]
-
-        for future in futures:
-            result: Dict[str, List[str]] = future.result()
-            results.update(result)
-
-    return JSONResponse(content={"result": results})
-
 
 @app.post("/chat")
 def chat_with_llm(request: FeedbackRequest, db: Session = Depends(get_db)):
@@ -328,31 +259,6 @@ def scrapeManager(
     sorted_comments = sorted(comments, key=lambda x: x["likes"], reverse=True)[:250]
 
     return {videoLink: {"comments": sorted_comments, "comment_count": len(sorted_comments)}}
-
-def summarize_video_helper(
-    videoURLS: VideoURLS,
-    threads: int = 100,
-    ) -> JSONResponse:
-
-    videosummarizer: VideoSummary = VideoSummary()
-
-    if not videoURLS.URLS or len(videoURLS.URLS) == 0:
-        return ({"Error": "videoURLS cannot be empty"}, True)
-
-    results = {}
-
-    with ThreadPoolExecutor(max_workers=threads) as executor:
-        futures = [
-            executor.submit(videosummarizer.get_video_summary, link)
-            for link in videoURLS.URLS
-        ]
-
-        for future in futures:
-            result: Dict[str, List[str]] = future.result()
-            results.update(result)
-
-    return ({"results": results}, False)
-    
 
 def summarize_comments_helper(
     videoURLS: VideoURLS,
