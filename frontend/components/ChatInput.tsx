@@ -16,7 +16,7 @@ export function ChatInput(props: ExtendedTextInputProps) {
   const theme = useMantineTheme();
 
   const sendMessage = async () => {
-    if (value.length <= 2) {
+    if (value.length <= 1) {
       return;
     } else {
       fn();

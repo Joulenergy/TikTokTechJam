@@ -4,6 +4,7 @@ import { IconSearch, IconArrowRight } from '@tabler/icons-react';
 import logo from '../public/logo.png';
 import NextImage from 'next/image';
 import { useRouter } from 'next/router';
+import toast, { Toaster } from 'react-hot-toast';
 
 export function LinkInput() {
   const theme = useMantineTheme();
@@ -12,41 +13,51 @@ export function LinkInput() {
 
   const handleButtonClick = () => {
     // Navigate to the desired page here
-
+    let isValid = false;
     // Check if the link is in the valid format
     if (value.length === 0) {
-      alert('Please enter a valid link!');
+      toast.error('Please enter a link!');
       return;
+    } else {
+      value.forEach((link) => {
+        let url;
+        try {
+          url = new URL(link);
+          isValid = true;
+        } catch (err) {
+          toast.error(`'${link}' is not a valid url. Ensure that http or https is added!`);
+          return;
+        }
+      });
     }
 
     const API_URL = process.env.API_URL || 'http://localhost:8000';
     const endpoint = `${API_URL}/summarize/`;
 
-    // call the API
-    fetch(endpoint, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        URLS: value,
-      }),
-    })
-      .then((response) => response.json())
-      .then((data) => {
-        console.log('Success:', data);
-        // Get the first key insdie data['results']
-        const url = Object.keys(data['results'])[0];
-        localStorage.setItem('context', url);
-        router.push('./chat');
+    if (isValid) {
+      // call the API
+      fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          URLS: value,
+        }),
       })
-      .catch((error) => {
-        console.error('Error:', error);
-        console.log(error.message)
-        alert('There was an error processing your request. Please try again later.');
-      });
-
-    
+        .then((response) => response.json())
+        .then((data) => {
+          console.log('Success:', data);
+          // Get the first key inside data['results']
+          const url = Object.keys(data['results'])[0];
+          localStorage.setItem('context', url);
+          router.push('./chat');
+        })
+        .catch((error) => {
+          console.error('Error:', error);
+          toast.error('There was an error processing your request. Please try again later.');
+        });
+    }
   };
 
   return (
@@ -58,6 +69,7 @@ export function LinkInput() {
         padding: '10px',
       }}
     >
+      <Toaster />
       <div style={{ marginBottom: '1rem' }}>
         <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
           <Image radius="md" h={80} w={80} component={NextImage} src={logo} alt="My Logo" />
@@ -74,7 +86,7 @@ export function LinkInput() {
           size="md"
           placeholder="Paste up to 3 links here!"
           maxTags={3}
-          value={value} 
+          value={value}
           onChange={setValue}
           leftSection={<IconSearch style={{ width: rem(18), height: rem(18) }} stroke={1.5} />}
           rightSection={
