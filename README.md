@@ -1,6 +1,6 @@
 # Project CommentSense
 
-CommentSense is an AI-powered content analysis and feedback system for TikTok videos. It leverages advanced natural language processing and computer vision technologies to provide creators with comprehensive insights and interactive assistance for their content.
+CommentSense is an AI-powered content analysis and feedback system for TikTok videos. It leverages advanced natural language processing and computer vision technologies to provide creators with comprehensive insights and interactive assistance for their content. [Devpost Link](https://devpost.com/software/commentsense)
 
 ## Getting Started
 
